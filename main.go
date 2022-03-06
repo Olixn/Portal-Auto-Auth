@@ -28,21 +28,21 @@ var (
 )
 
 func init() {
-	file, err := os.OpenFile("/tmp/campus/run.log",
+	file, err := os.OpenFile("/tmp/campus_run.log",
 		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open error log file:", err)
 	}
 
-	Trace = log.New(ioutil.Discard,
+	Trace = log.New(io.MultiWriter(file, os.Stderr),
 		"TRACE: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
-	Info = log.New(os.Stdout,
+	Info = log.New(io.MultiWriter(file, os.Stderr),
 		"INFO: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
-	Warning = log.New(os.Stdout,
+	Warning = log.New(io.MultiWriter(file, os.Stderr),
 		"WARNING: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
@@ -110,7 +110,7 @@ func PostData(url string, ip string, mac string, mobile string, password string)
 		Warning.Println(err)
 	}
 
-	Info.Println(body)
+	Info.Println(string(body))
 	defer resp.Body.Close()
 }
 
