@@ -22,7 +22,7 @@ import (
 
 func init() {
 	// 初始化日志
-	logFile, err := os.OpenFile(`/tmp/tmp/日志文件.log`, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(`/tmp/tmp/campus.log`, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
 	}
@@ -93,7 +93,7 @@ func Mac() (mac string) {
 		panic("Poor soul, here is what you got: " + err.Error())
 	}
 	for _, inter := range interfaces {
-		if inter.Name == "wan" {
+		if inter.Name == "wan" || inter.Name == "eth0.2" {
 			mac := inter.HardwareAddr
 			return mac.String()
 		} else {
@@ -110,7 +110,7 @@ func Ip() (ip string) {
 		panic("Poor soul, here is what you got: " + err.Error())
 	}
 	for _, inter := range interfaces {
-		if inter.Name == "wan" {
+		if inter.Name == "wan" || inter.Name == "eth0.2" {
 			addrs, _ := inter.Addrs()
 			for _, v := range addrs {
 				ipv4 := v.(*net.IPNet).IP.To4()
