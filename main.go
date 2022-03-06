@@ -9,8 +9,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -20,23 +20,45 @@ import (
 	"strings"
 )
 
+var (
+	Trace   *log.Logger
+	Info    *log.Logger
+	Warning *log.Logger
+	Error   *log.Logger
+)
+
 func init() {
-	// 初始化日志
-	logFile, err := os.OpenFile(`/tmp/tmp/campus.log`, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	file, err := os.OpenFile("/tmp/campus/run.log",
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		panic(err)
+		log.Fatalln("Failed to open error log file:", err)
 	}
-	// 设置存储位置
-	log.SetOutput(logFile)
+
+	Trace = log.New(ioutil.Discard,
+		"TRACE: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
+
+	Info = log.New(os.Stdout,
+		"INFO: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
+
+	Warning = log.New(os.Stdout,
+		"WARNING: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
+
+	Error = log.New(io.MultiWriter(file, os.Stderr),
+		"ERROR: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
 }
 
-func PostData(url string, ip string, mac string) {
-	refer := "http://61.240.137.242:8888/hw/HBHUAWEI/login?apmac=11-11-11-11-11-11&userip=" + ip + "&nasip=221.192.23.190&user-mac=" + mac
+func PostData(url string, ip string, mac string, mobile string, password string) {
+	Trace.Println("ip : " + ip + "	mac : " + mac)
+	Trace.Println("account : " + mobile + "	password : " + password)
 
 	urlValues := url2.Values{}
-	urlValues.Add("mobile", "")
+	urlValues.Add("mobile", mobile)
 	urlValues.Add("mobile_english", "")
-	urlValues.Add("password", "")
+	urlValues.Add("password", password)
 	urlValues.Add("password_english", "")
 	urlValues.Add("auth_type", "account")
 	urlValues.Add("enterprise_id", "51")
@@ -60,10 +82,15 @@ func PostData(url string, ip string, mac string) {
 	urlValues.Add("gw_port", "None")
 	urlValues.Add("url", "None")
 	urlValues.Add("language_tag", "0")
-
 	reqBody := urlValues.Encode()
+
+	refer := "http://61.240.137.242:8888/hw/HBHUAWEI/login?apmac=11-11-11-11-11-11&userip=" + ip + "&nasip=221.192.23.190&user-mac=" + mac
+
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", url, strings.NewReader(reqBody))
+	if err != nil {
+		Warning.Println(err)
+	}
 	req.Header.Add("Proxy-Connection", "keep-alive")
 	req.Header.Add("Accept", "*/*")
 	req.Header.Add("X-Requested-With", "XMLHttpRequest")
@@ -72,17 +99,18 @@ func PostData(url string, ip string, mac string) {
 	req.Header.Add("Origin", "http://61.240.137.242:8888")
 	req.Header.Add("Referer", refer)
 	req.Header.Add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
-	resp, err := client.Do(req)
 
-	var result map[string]interface{}
+	resp, err := client.Do(req)
+	if err != nil {
+		Warning.Println(err)
+	}
+
 	body, err := ioutil.ReadAll(resp.Body)
-	if err == nil {
-		err = json.Unmarshal(body, &result)
+	if err != nil {
+		Warning.Println(err)
 	}
-	log.Println(result)
-	for k, v := range result {
-		fmt.Println(k, ":", v)
-	}
+
+	Info.Println(body)
 	defer resp.Body.Close()
 }
 
@@ -125,9 +153,28 @@ func Ip() (ip string) {
 
 func main() {
 	// http://61.240.137.242:8888/hw/HBHUAWEI/login?apmac=11-11-11-11-11-11&userip=10.255.202.150&nasip=221.192.23.190&user-mac=20:76:93:43:84:57
+	fmt.Println("----------------------------------------------")
+	fmt.Println("welcome to use Portal Auto Auth")
+	fmt.Println("----------------------------------------------")
+
+	mobile := ""
+	password := ""
+
 	mac := Mac()
-	fmt.Println("wan MAC = ", mac)
+	fmt.Println("wan MAC : ", mac)
+	if mac == "" {
+		Error.Println("wan mac is empty!")
+		os.Exit(0)
+	}
 	ip := Ip()
-	fmt.Println("wan IP = ", ip)
-	PostData("http://61.240.137.242:8888/hw/internal_auth", ip, mac)
+	fmt.Println("wan IP : ", ip)
+	if ip == "" {
+		Error.Println("wan ip is empty!")
+		os.Exit(0)
+	}
+	PostData("http://61.240.137.242:8888/hw/internal_auth", ip, mac, mobile, password)
+	fmt.Println("----------------------------------------------")
+	fmt.Println("Portal Auto Auth Finished")
+	fmt.Println("----------------------------------------------")
+	os.Exit(0)
 }
