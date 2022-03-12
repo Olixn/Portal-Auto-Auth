@@ -10,9 +10,8 @@ package main
 
 import (
 	"fmt"
-	"io"
+	"github.com/Olixn/Potal-Auto-Auth/logger"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	url2 "net/url"
@@ -20,40 +19,13 @@ import (
 	"strings"
 )
 
-var (
-	Trace   *log.Logger
-	Info    *log.Logger
-	Warning *log.Logger
-	Error   *log.Logger
-)
-
 func init() {
-	file, err := os.OpenFile("/tmp/campus_run.log",
-		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalln("Failed to open error log file:", err)
-	}
-
-	Trace = log.New(io.MultiWriter(file, os.Stderr),
-		"TRACE: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
-
-	Info = log.New(io.MultiWriter(file, os.Stderr),
-		"INFO: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
-
-	Warning = log.New(io.MultiWriter(file, os.Stderr),
-		"WARNING: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
-
-	Error = log.New(io.MultiWriter(file, os.Stderr),
-		"ERROR: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
+	logger.InitLog("/tmp/tmp")
 }
 
 func PostData(url string, ip string, mac string, mobile string, password string) {
-	Trace.Println("ip : " + ip + "	mac : " + mac)
-	Trace.Println("account : " + mobile + "	password : " + password)
+	logger.Trace.Println("ip : " + ip + "	mac : " + mac)
+	logger.Trace.Println("account : " + mobile + "	password : " + password)
 
 	urlValues := url2.Values{}
 	urlValues.Add("mobile", mobile)
@@ -89,7 +61,7 @@ func PostData(url string, ip string, mac string, mobile string, password string)
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", url, strings.NewReader(reqBody))
 	if err != nil {
-		Warning.Println(err)
+		logger.Warning.Println(err)
 	}
 	req.Header.Add("Proxy-Connection", "keep-alive")
 	req.Header.Add("Accept", "*/*")
@@ -102,26 +74,27 @@ func PostData(url string, ip string, mac string, mobile string, password string)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		Warning.Println(err)
+		logger.Warning.Println(err)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		Warning.Println(err)
+		logger.Warning.Println(err)
 	}
 
-	Info.Println(string(body))
+	logger.Info.Println(string(body))
+	logger.Info.Println("Login success!!!!")
 	defer resp.Body.Close()
 }
 
-func Mac() (mac string) {
+func Mac(interName string) (mac string) {
 	// 获取本机的MAC地址
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		panic("Poor soul, here is what you got: " + err.Error())
 	}
 	for _, inter := range interfaces {
-		if inter.Name == "wan" || inter.Name == "eth0.2" {
+		if inter.Name == interName {
 			mac := inter.HardwareAddr
 			return mac.String()
 		} else {
@@ -131,14 +104,14 @@ func Mac() (mac string) {
 	return ""
 }
 
-func Ip() (ip string) {
+func Ip(interName string) (ip string) {
 	// 获取本机的IP地址
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		panic("Poor soul, here is what you got: " + err.Error())
 	}
 	for _, inter := range interfaces {
-		if inter.Name == "wan" || inter.Name == "eth0.2" {
+		if inter.Name == interName {
 			addrs, _ := inter.Addrs()
 			for _, v := range addrs {
 				ipv4 := v.(*net.IPNet).IP.To4()
@@ -157,19 +130,23 @@ func main() {
 	fmt.Println("welcome to use Portal Auto Auth")
 	fmt.Println("----------------------------------------------")
 
+	// 登录信息
 	mobile := ""
 	password := ""
 
-	mac := Mac()
+	// 网卡名称 ifconfig
+	interName := "eth0.2"
+
+	mac := Mac(interName)
 	fmt.Println("wan MAC : ", mac)
 	if mac == "" {
-		Error.Println("wan mac is empty!")
+		logger.Error.Println("wan mac is empty!")
 		os.Exit(0)
 	}
-	ip := Ip()
+	ip := Ip(interName)
 	fmt.Println("wan IP : ", ip)
 	if ip == "" {
-		Error.Println("wan ip is empty!")
+		logger.Error.Println("wan ip is empty!")
 		os.Exit(0)
 	}
 	PostData("http://61.240.137.242:8888/hw/internal_auth", ip, mac, mobile, password)
