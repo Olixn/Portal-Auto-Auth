@@ -14,6 +14,8 @@
 # 二次开发
 - `git clone https://github.com/Olixn/Portal-Auto-Auth.git`
 - `go mod tidy`
+- 执行`build.bat`生成openwrt下的linux可执行文件
+- 执行`go build main.go`生成exe文件
 
 # 其他
 程序经过压缩编译后大小有5兆左右，请确保您的路由器有足够的空间。  
