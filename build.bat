@@ -19,7 +19,7 @@ echo now the GOOS:
 
 echo now the GOARCH:
  go env GOARCH
-go build -ldflags="-w -s" main.go
+go build -o main -trimpath -ldflags="-w -s" main.go
 
 MOVE main %cd%\server
 
