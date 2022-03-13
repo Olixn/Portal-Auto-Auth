@@ -22,7 +22,7 @@ echo now the GOARCH:
 go build -o main -trimpath -ldflags="-w -s" main.go
 
 MOVE main %cd%\server
-
+COPY config.yaml %cd%\server
 
 SET CGO_ENABLED=1
 SET GOOS=windows
