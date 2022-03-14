@@ -18,7 +18,7 @@ import (
 
 func init() {
 	logger.InitLog("/tmp/tmp")
-	config.InitConfig()
+	config.InitConfig(os.Args[1])
 }
 
 func main() {

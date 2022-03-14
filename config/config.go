@@ -28,9 +28,9 @@ type Setting struct {
 	InterName string `yaml:"interName"`
 }
 
-func InitConfig() {
+func InitConfig(p string) {
 	AppConfig = &Config{}
-	content, err := ioutil.ReadFile("config.yaml")
+	content, err := ioutil.ReadFile(p)
 	if err != nil {
 		logger.Error.Println("解析config.yaml读取错误: " + err.Error())
 		os.Exit(0)
