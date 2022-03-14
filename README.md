@@ -7,7 +7,7 @@
 - 配置`config.yaml`
 - 添加crontab计划任务  
   - `crontab -e`
-  - `*/5 * * * * /tmp/server/main`
+  - `*/5 * * * * /tmp/server/main /tmp/server/config.yaml`
   - `5 0 * * * rm -rf /tmp/tmp/campus_run.log`
 - 查看运行日志 `cat /tmp/tmp/campus_run.log`
 
