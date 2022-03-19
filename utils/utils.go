@@ -2,7 +2,7 @@
  * @Author: Ne-21
  * @Description: tools
  * @File: utils.go
- * @Version: 1.0.0
+ * @Version: 1.1
  * @Date: 2022/3/13
  */
 
@@ -14,49 +14,8 @@ import (
 	"net"
 	url2 "net/url"
 	"reflect"
+	"time"
 )
-
-func Mac(interName string) (mac string, err error) {
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		panic("Poor soul, here is what you got: " + err.Error())
-	}
-	for _, inter := range interfaces {
-		if inter.Name == interName {
-			mac := inter.HardwareAddr
-			if mac.String() == "" {
-				err = errors.New("wan MAC Address is empty")
-				return "", err
-			}
-			return mac.String(), nil
-		} else {
-			continue
-		}
-	}
-	return "", err
-}
-
-func Ip(interName string) (ip string, err error) {
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		panic("Poor soul, here is what you got: " + err.Error())
-	}
-	for _, inter := range interfaces {
-		if inter.Name == interName {
-			addrs, _ := inter.Addrs()
-			for _, v := range addrs {
-				ipv4 := v.(*net.IPNet).IP.To4()
-				if ipv4 != nil {
-					return ipv4.String(), nil
-				} else {
-					err = errors.New("wan IP Address is empty")
-					return "", err
-				}
-			}
-		}
-	}
-	return "", err
-}
 
 func Struct2Values(a interface{}) (values url2.Values, err error) {
 	rType := reflect.TypeOf(a).Elem()
@@ -76,4 +35,25 @@ func Struct2Values(a interface{}) (values url2.Values, err error) {
 	}
 
 	return values, nil
+}
+
+func ParseUrl(url string) (urlParams url2.Values) {
+	values, err := url2.ParseRequestURI(url)
+	if err != nil {
+		logger.Error.Println("url parse error!" + err.Error())
+	}
+
+	urlParams = values.Query()
+	return
+}
+
+func TimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
+	return func(netw, addr string) (net.Conn, error) {
+		conn, err := net.DialTimeout(netw, addr, cTimeout)
+		if err != nil {
+			return nil, err
+		}
+		conn.SetDeadline(time.Now().Add(rwTimeout))
+		return conn, nil
+	}
 }

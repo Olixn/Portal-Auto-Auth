@@ -2,13 +2,14 @@
  * @Author: Ne-21
  * @Description:
  * @File: portal.go
- * @Version: 1.0.0
+ * @Version: 1.1
  * @Date: 2022/3/17
  */
 
 package model
 
 import (
+	"encoding/json"
 	"github.com/Olixn/Potal-Auto-Auth/logger"
 	"io/ioutil"
 	"net/http"
@@ -51,7 +52,7 @@ func (p *Portal) Run(values url.Values) {
 
 	reqBody := values.Encode()
 
-	refer := "http://61.240.137.242:8888/hw/HBHUAWEI/login?apmac=11-11-11-11-11-11&userip=" + p.UserIp + "&nasip=221.192.23.190&user-mac=" + p.ClientMac
+	refer := "http://61.240.137.242:8888/hw/HBHUAWEI/login?apmac=" + p.Vlan + "&userip=" + p.UserIp + "&nasip=" + p.NasIp + "&user-mac=" + p.ClientMac
 
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", "http://61.240.137.242:8888/hw/internal_auth", strings.NewReader(reqBody))
@@ -77,23 +78,28 @@ func (p *Portal) Run(values url.Values) {
 		logger.Warning.Println(err)
 	}
 
-	logger.Info.Println(string(body))
-	logger.Info.Println("Login success!!!!")
+	var respond map[string]interface{}
+	err = json.Unmarshal(body, &respond)
+	if err != nil {
+		logger.Warning.Println(err)
+		return
+	}
+
+	if respond["op"].(string) == "ok" {
+		logger.Info.Println("Login success!")
+	} else {
+		logger.Info.Println("Login error!" + respond["message"].(string))
+	}
 	defer resp.Body.Close()
 }
 
-func NewPortal(mobile string, password string, ip string, mac string) (p *Portal) {
+func NewPortal() (p *Portal) {
 	return &Portal{
-		Mobile:        mobile,
-		Password:      password,
-		UserIp:        ip,
-		ClientMac:     mac,
+		Vlan:          "11-11-11-11-11-11",
 		AuthType:      "account",
 		EnterpriseId:  "51",
 		EnterpriseUrl: "HBHUAWEI",
 		SiteId:        "4662",
-		NasIp:         "221.192.23.190",
-		Vlan:          "11-11-11-11-11-11",
 		LanguageTag:   "0",
 	}
 }

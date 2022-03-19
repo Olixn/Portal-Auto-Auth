@@ -23,9 +23,8 @@ type Config struct {
 }
 
 type Setting struct {
-	Mobile    string `yaml:"mobile"`
-	Password  string `yaml:"password"`
-	InterName string `yaml:"interName"`
+	Mobile   string `yaml:"mobile"`
+	Password string `yaml:"password"`
 }
 
 func InitConfig(p string) {

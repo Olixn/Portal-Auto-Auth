@@ -1,8 +1,8 @@
 /**
  * @Author: Ne-21
- * @Description: 配合crontab进行portal认证
+ * @Description: main
  * @File: main.go
- * @Version: 1.0.0
+ * @Version: 1.1
  * @Date: 2022/3/5
  */
 
@@ -18,15 +18,9 @@ import (
 func init() {
 	logger.InitLog("/tmp/tmp")
 	config.InitConfig(os.Args[1])
+	cmd.InitCmd()
 }
 
 func main() {
-	logger.Info.Println("--------------------START---------------------")
-	logger.Info.Println("-----welcome to use Portal Auto Auth")
-	logger.Info.Println("-----https://github.com/Olixn/Portal-Auto-Auth")
-	logger.Info.Println("-----Author Ne-21 QQ 865194400")
-	logger.Info.Println("----------------------------------------------")
 	cmd.Run()
-	logger.Info.Println("---------------------END----------------------")
-	os.Exit(0)
 }

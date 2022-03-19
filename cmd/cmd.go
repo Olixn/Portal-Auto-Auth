@@ -2,45 +2,93 @@
  * @Author: Ne-21
  * @Description: 控制器
  * @File: cmd.go
- * @Version: 1.0.0
+ * @Version: 1.1
  * @Date: 2022/3/17
  */
 
 package cmd
 
 import (
-	"fmt"
 	"github.com/Olixn/Potal-Auto-Auth/config"
 	"github.com/Olixn/Potal-Auto-Auth/logger"
 	"github.com/Olixn/Potal-Auto-Auth/model"
 	"github.com/Olixn/Potal-Auto-Auth/utils"
+	"net/http"
 	"os"
+	"time"
 )
 
-func Run() {
+var Portal *model.Portal
+
+func InitCmd() {
 	mobile := config.AppConfig.Setting.Mobile
 	password := config.AppConfig.Setting.Password
-	interName := config.AppConfig.Setting.InterName
+	Portal = model.NewPortal()
+	Portal.Mobile = mobile
+	Portal.Password = password
+}
 
-	mac, err := utils.Mac(interName)
-	fmt.Println("wan MAC : ", mac)
-	if err != nil {
-		logger.Error.Println("wan mac is empty!" + err.Error())
-		os.Exit(0)
-	}
-
-	ip, err := utils.Ip(interName)
-	fmt.Println("wan IP : ", ip)
-	if err != nil {
-		logger.Error.Println("wan ip is empty!" + err.Error())
-		os.Exit(0)
-	}
-
-	portal := model.NewPortal(mobile, password, ip, mac)
-	values, err := utils.Struct2Values(portal)
+func Login() {
+	values, err := utils.Struct2Values(Portal)
 	if err != nil {
 		logger.Error.Println(err.Error())
 		return
 	}
-	portal.Run(values)
+	Portal.Run(values)
+}
+
+func Check() (b bool) {
+	checkUrl := "http://connect.rom.miui.com/generate_204"
+
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	res, err := client.Get(checkUrl)
+	if err != nil {
+		logger.Error.Println(err.Error() + ",Forced jump to authentication interface.")
+		res, err = client.Get("http://1.1.1.1")
+		if err != nil {
+			logger.Error.Println("There is an error in forcibly jumping to the authentication interface. Please restart the router or go to GitHub for help.")
+			os.Exit(0)
+		}
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == 204 {
+		logger.Info.Println("The network connection is normal.")
+		return true
+	}
+
+	if res.Header.Get("Location") != "" {
+		logger.Info.Println("redirect portal url : " + res.Header.Get("Location"))
+		p := utils.ParseUrl(res.Header.Get("Location"))
+		Portal.UserIp = p["userip"][0]
+		Portal.NasIp = p["nasip"][0]
+		Portal.ClientMac = p["user-mac"][0]
+		return false
+	} else {
+		logger.Info.Println("The network connection is normal")
+		return true
+	}
+}
+
+func Run() {
+	for {
+		_, err := os.Stat("/tmp/tmp/campus_run.log")
+		if err != nil {
+			if os.IsNotExist(err) {
+				logger.InitLog("/tmp/tmp")
+			}
+		}
+		if Check() {
+			time.Sleep(time.Second * 60)
+			continue
+		} else {
+			Login()
+		}
+		time.Sleep(time.Second * 60)
+	}
 }
