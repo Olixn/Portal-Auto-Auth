@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	logger.InitLog("/tmp/tmp")
+	logger.InitLog("/tmp")
 	config.InitConfig(os.Args[1])
 	cmd.InitCmd()
 }

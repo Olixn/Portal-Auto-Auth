@@ -77,10 +77,10 @@ func Check() (b bool) {
 
 func Run() {
 	for {
-		_, err := os.Stat("/tmp/tmp/campus_run.log")
+		_, err := os.Stat("/tmp/campus_run.log")
 		if err != nil {
 			if os.IsNotExist(err) {
-				logger.InitLog("/tmp/tmp")
+				logger.InitLog("/tmp")
 			}
 		}
 		if Check() {
