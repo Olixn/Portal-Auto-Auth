@@ -11,10 +11,8 @@ package utils
 import (
 	"errors"
 	"github.com/Olixn/Potal-Auto-Auth/logger"
-	"net"
 	url2 "net/url"
 	"reflect"
-	"time"
 )
 
 func Struct2Values(a interface{}) (values url2.Values, err error) {
@@ -45,15 +43,4 @@ func ParseUrl(url string) (urlParams url2.Values) {
 
 	urlParams = values.Query()
 	return
-}
-
-func TimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
-	return func(netw, addr string) (net.Conn, error) {
-		conn, err := net.DialTimeout(netw, addr, cTimeout)
-		if err != nil {
-			return nil, err
-		}
-		conn.SetDeadline(time.Now().Add(rwTimeout))
-		return conn, nil
-	}
 }
