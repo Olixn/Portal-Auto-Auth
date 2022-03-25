@@ -13,6 +13,7 @@ import (
 	"github.com/Olixn/Potal-Auto-Auth/logger"
 	"github.com/Olixn/Potal-Auto-Auth/model"
 	"github.com/Olixn/Potal-Auto-Auth/utils"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -47,22 +48,27 @@ func Check() (b bool) {
 	}
 
 	res, err := client.Get(checkUrl)
+	defer res.Body.Close()
 	if err != nil {
 		logger.Error.Println(err.Error() + ",Forced jump to authentication interface.")
-		res, err = client.Get("http://1.1.1.1")
-		if err != nil {
-			logger.Error.Println("There is an error in forcibly jumping to the authentication interface. Please restart the router or go to GitHub for help.")
-			os.Exit(0)
-		}
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode == 204 {
+	} else if res.StatusCode == 204 {
 		logger.Info.Println("The network connection is normal.")
+		return true
+	} else {
+		body, _ := ioutil.ReadAll(res.Body)
+		logger.Trace.Println(string(body))
+		logger.Error.Println("There is an error. Please restart the router or go to GitHub for help.")
+		return true
+	}
+
+	res, err = client.Get("http://1.1.1.1")
+	if err != nil {
+		logger.Error.Println("There is an error in forcibly jumping to the authentication interface. Please restart the router or go to GitHub for help.")
 		return true
 	}
 
 	if res.Header.Get("Location") != "" {
+		logger.Warning.Println("")
 		logger.Info.Println("redirect portal url : " + res.Header.Get("Location"))
 		p := utils.ParseUrl(res.Header.Get("Location"))
 		Portal.UserIp = p["userip"][0]
