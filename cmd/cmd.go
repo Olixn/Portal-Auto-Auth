@@ -68,7 +68,6 @@ func Check() (b bool) {
 	}
 
 	if res.Header.Get("Location") != "" {
-		logger.Warning.Println("")
 		logger.Info.Println("redirect portal url : " + res.Header.Get("Location"))
 		p := utils.ParseUrl(res.Header.Get("Location"))
 		Portal.UserIp = p["userip"][0]
