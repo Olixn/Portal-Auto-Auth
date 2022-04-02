@@ -23,13 +23,12 @@ func Struct2Values(a interface{}) (values url2.Values, err error) {
 		err = errors.New("Struct2Values Error! Not Struct")
 		return nil, err
 	}
-
 	values = url2.Values{}
 	for i := 0; i < rValue.NumField(); i++ {
 		if rValue.Field(i).String() == "" {
 			rValue.Field(i).SetString("none")
 		}
-		values.Add(rType.Field(i).Tag.Get("param"), rValue.Field(i).String())
+		values.Add(rType.Field(i).Tag.Get("json"), rValue.Field(i).String())
 	}
 
 	return values, nil
@@ -42,5 +41,5 @@ func ParseUrl(url string) (urlParams url2.Values) {
 	}
 
 	urlParams = values.Query()
-	return
+	return urlParams
 }

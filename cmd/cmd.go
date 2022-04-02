@@ -13,6 +13,7 @@ import (
 	"github.com/Olixn/Potal-Auto-Auth/logger"
 	"github.com/Olixn/Potal-Auto-Auth/model"
 	"github.com/Olixn/Potal-Auto-Auth/utils"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -48,7 +49,13 @@ func Check() (b bool) {
 	}
 
 	res, err := client.Get(checkUrl)
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error.Println(err.Error())
+		}
+	}(res.Body)
+
 	if err != nil {
 		logger.Error.Println(err.Error() + ",Forced jump to authentication interface.")
 	} else if res.StatusCode == 204 {
