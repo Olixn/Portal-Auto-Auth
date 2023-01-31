@@ -9,8 +9,8 @@
   - `/tmp/server/main /tmp/server/config.yaml`
 - 添加crontab计划任务  
   - `crontab -e`
-  - `5 0 * * * rm -rf /tmp/tmp/campus_run.log`
-- 查看运行日志 `cat /tmp/tmp/campus_run.log`
+  - `5 0 * * * rm -rf /tmp/campus_run.log`
+- 查看运行日志 `cat /tmp/campus_run.log`
 
 # 二次开发
 - `git clone https://github.com/Olixn/Portal-Auto-Auth.git`
