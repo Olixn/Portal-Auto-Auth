@@ -13,14 +13,18 @@ import (
 	"github.com/Olixn/Potal-Auto-Auth/logger"
 	"github.com/Olixn/Potal-Auto-Auth/model"
 	"github.com/Olixn/Potal-Auto-Auth/utils"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
 )
 
 var Portal *model.Portal
+var Client *http.Client
+var redirect bool
+var portalUrl string
+
+const CheckUrl = "http://connect.rom.miui.com/generate_204"
+const CheckTime = 10
 
 func InitCmd() {
 	mobile := config.AppConfig.Setting.Mobile
@@ -28,9 +32,36 @@ func InitCmd() {
 	Portal = model.NewPortal()
 	Portal.Mobile = mobile
 	Portal.Password = password
+
+	Client = &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 }
 
 func Login() {
+
+	if !redirect {
+		res, err := Client.Get("http://1.1.1.1")
+		if err != nil {
+			logger.Error.Println("There is an error in forcibly jumping to the authentication interface. Please restart the router or go to GitHub for help.")
+			return
+		}
+
+		if redirectUrl := res.Header.Get("Location"); redirectUrl != "" {
+			portalUrl = redirectUrl
+		} else {
+			logger.Error.Println("There is no redirect URL")
+			return
+		}
+	}
+
+	p := utils.ParseUrl(portalUrl)
+	Portal.UserIp = p["userip"][0]
+	Portal.NasIp = p["nasip"][0]
+	Portal.ClientMac = p["user-mac"][0]
+
 	values, err := utils.Struct2Values(Portal)
 	if err != nil {
 		logger.Error.Println(err.Error())
@@ -40,51 +71,24 @@ func Login() {
 }
 
 func Check() (b bool) {
-	checkUrl := "http://connect.rom.miui.com/generate_204"
 
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
-	res, err := client.Get(checkUrl)
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			logger.Error.Println(err.Error())
-		}
-	}(res.Body)
-
-	if err != nil {
-		logger.Error.Println(err.Error() + ",Forced jump to authentication interface.")
-	} else if res.StatusCode == 204 {
-		logger.Info.Println("The network connection is normal.")
-		return true
-	} else {
-		body, _ := ioutil.ReadAll(res.Body)
-		logger.Trace.Println(string(body))
-		logger.Error.Println("There is an error. Please restart the router or go to GitHub for help.")
+	res, err := Client.Get(CheckUrl)
+	if err != nil && res.StatusCode == 204 {
+		// 网络连接正常
 		return true
 	}
 
-	res, err = client.Get("http://1.1.1.1")
-	if err != nil {
-		logger.Error.Println("There is an error in forcibly jumping to the authentication interface. Please restart the router or go to GitHub for help.")
-		return true
-	}
-
-	if res.Header.Get("Location") != "" {
-		logger.Info.Println("redirect portal url : " + res.Header.Get("Location"))
-		p := utils.ParseUrl(res.Header.Get("Location"))
-		Portal.UserIp = p["userip"][0]
-		Portal.NasIp = p["nasip"][0]
-		Portal.ClientMac = p["user-mac"][0]
+	if redirectUrl := res.Header.Get("Location"); redirectUrl != "" {
+		redirect = true
+		portalUrl = redirectUrl
+		// 网络连接错误，但获取到了认证网址，执行登录
 		return false
 	} else {
-		logger.Info.Println("The network connection is normal")
-		return true
+		redirect = false
+		// 网络连接错误，没有获取到了认证网址，执行跳转登录
+		return false
 	}
+
 }
 
 func Run() {
@@ -96,11 +100,11 @@ func Run() {
 			}
 		}
 		if Check() {
-			time.Sleep(time.Second * 60)
+			time.Sleep(time.Second * CheckTime)
 			continue
 		} else {
 			Login()
 		}
-		time.Sleep(time.Second * 60)
+		time.Sleep(time.Second * CheckTime * 2)
 	}
 }
