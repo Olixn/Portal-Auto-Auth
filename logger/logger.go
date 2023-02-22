@@ -45,8 +45,9 @@ func InitLog(path string) {
 		log.Ldate|log.Ltime|log.Lshortfile)
 
 	Info.Println("----------------------------------------------")
-	Info.Println("-----welcome to use Portal Auto Auth")
+	Info.Println("-----Welcome to use Portal Auto Auth")
 	Info.Println("-----https://github.com/Olixn/Portal-Auto-Auth")
-	Info.Println("-----Author:Ne-21 QQ:865194400 Version:1.1")
+	Info.Println("-----Author:Ne-21	QQ:865194400")
+	Info.Println("-----Version:1.2	Update:20230222")
 	Info.Println("----------------------------------------------")
 }
