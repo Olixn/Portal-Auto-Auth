@@ -73,7 +73,7 @@ func Login() {
 func Check() (b bool) {
 
 	res, err := Client.Get(CheckUrl)
-	if err != nil && res.StatusCode == 204 {
+	if err == nil && res.StatusCode == 204 {
 		// 网络连接正常
 		return true
 	}
