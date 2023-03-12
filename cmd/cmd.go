@@ -2,13 +2,14 @@
  * @Author: Ne-21
  * @Description: 控制器
  * @File: cmd.go
- * @Version: 1.1
+ * @Version: 1.3
  * @Date: 2022/3/17
  */
 
 package cmd
 
 import (
+	"context"
 	"github.com/Olixn/Potal-Auto-Auth/config"
 	"github.com/Olixn/Potal-Auto-Auth/logger"
 	"github.com/Olixn/Potal-Auto-Auth/model"
@@ -91,7 +92,7 @@ func Check() (b bool) {
 
 }
 
-func Run() {
+func Run(ctx context.Context) {
 	for {
 		_, err := os.Stat("/tmp/campus_run.log")
 		if err != nil {
@@ -101,10 +102,15 @@ func Run() {
 		}
 		if Check() {
 			time.Sleep(time.Second * CheckTime)
-			continue
 		} else {
 			Login()
+			time.Sleep(time.Second * CheckTime * 2)
 		}
-		time.Sleep(time.Second * CheckTime * 2)
+		select {
+		case <-ctx.Done():
+			logger.Info.Println("程序退出啦~")
+			os.Exit(0)
+			return
+		}
 	}
 }

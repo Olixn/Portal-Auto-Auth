@@ -2,7 +2,7 @@
  * @Author: Ne-21
  * @Description: 日志部分
  * @File: logger.go
- * @Version: 1.1
+ * @Version: 1.3
  * @Date: 2022/3/12
  */
 
@@ -48,6 +48,6 @@ func InitLog(path string) {
 	Info.Println("-----Welcome to use Portal Auto Auth")
 	Info.Println("-----https://github.com/Olixn/Portal-Auto-Auth")
 	Info.Println("-----Author:Ne-21	QQ:865194400")
-	Info.Println("-----Version:1.2	Update:20230222")
+	Info.Println("-----Version:1.3	Update:20230312")
 	Info.Println("----------------------------------------------")
 }
