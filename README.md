@@ -3,10 +3,10 @@
 # 如何使用
 - 下载最新版程序 https://github.com/Olixn/Portal-Auto-Auth/releases
 - 解压，上传至openwrt路由器（例如/tmp目录）
-- 进入`/tmp/server`目录执行`chmod +x main`
+- 进入`/tmp/server`目录执行`chmod +x campus_heb`
 - 配置`config.yaml`
 - 添加开机启动项  
-  - `/tmp/server/main /tmp/server/config.yaml`
+  - `/tmp/server/campus_heb /tmp/server/config.yaml`
 - 添加crontab计划任务  
   - `crontab -e`
   - `30 5 * * * kill -9 $(ps|pgrep campus) && sleep 10 && reboot` // 每天凌晨5：30重启路由器，无感解决24小时断网问题
