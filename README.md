@@ -9,7 +9,7 @@
   - `/tmp/server/main /tmp/server/config.yaml`
 - 添加crontab计划任务  
   - `crontab -e`
-  - `10 5 * * * sleep 70 && touch /etc/banner && reboot` // 每天凌晨5：10重启路由器，无感解决24小时断网问题
+  - `30 5 * * * kill -9 $(ps|pgrep campus) && sleep 10 && reboot` // 每天凌晨5：30重启路由器，无感解决24小时断网问题
 - 查看运行日志 `cat /tmp/campus_run.log`
 
 # 二次开发
